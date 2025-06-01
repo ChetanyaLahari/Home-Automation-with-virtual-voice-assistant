@@ -1,0 +1,156 @@
+// PYTHON CODE
+
+
+import serial
+import speech_recognition as sr
+import requests
+import datetime
+import pyttsx3
+import time
+import random
+
+try:
+    arduino = serial.Serial('COM5', 9600)
+    time.sleep(2)
+    print("✅ Connected to Arduino on COM5.")
+except Exception as e:
+    print(f"❌ Error connecting to Arduino: {e}")
+    exit()
+
+recognizer = sr.Recognizer()
+engine = pyttsx3.init()
+engine.setProperty('rate', 170)
+engine.setProperty('volume', 1.0)
+
+weather_api_key = 'f1415c7208ae2f968cf391dd57623ac9'
+air_api_key = '0f01989b-050f-422c-a837-b78fc3e53da4'
+pincode = '522019'
+city = 'Chowdavaram'
+city2 = 'Vijayawada'
+state = 'Andhra Pradesh'
+country = 'India'
+
+jokes = [
+    "Why don’t scientists trust atoms? Because they make up everything!",
+    "What’s a computer’s favorite snack? Microchips!",
+    "Why did the math book look sad? It had too many problems.",
+    "Why do we never tell secrets on a farm? Because the potatoes have eyes and the corn has ears!"
+]
+
+conversations = {
+    "how are you": ["I'm great! How about you?", "Feeling awesome! What can I do for you?"],
+    "what's your name": ["My name is Harry! Your smart assistant.", "I'm Harry, here to assist you."],
+    "who created you": ["I was created by an amazing mind! What else do you want to know?", "I am a product of creative coding!"],
+    "what can you do": ["I can control your appliances, tell jokes, give weather updates, and much more!", "I'm here to make your life easier. Just tell me what you need!"],
+    "are you smart": ["Of course! I learn from the best!", "I'm as smart as my developer made me!"],
+    "thank you": ["You're welcome! Happy to help.", "Anytime!"],
+    "bye": ["Goodbye! Have a great day.", "Take care! I'm here whenever you need me."]
+}
+
+def speak(text):
+    print(f"🤖 Harry: {text}")
+    engine.say(text)
+    engine.runAndWait()
+
+def send_command(command):
+    if command in ['1', '0', '3', '2', '5', '4', '6', '7']:
+        arduino.write(command.encode())
+        speak("Command executed successfully.")
+    else:
+        speak("Invalid command. Please try again.")
+
+def get_weather():
+    try:
+        url = f"https://api.openweathermap.org/data/2.5/weather?zip={pincode},IN&appid={weather_api_key}&units=metric"
+        response = requests.get(url).json()
+        if response.get('main'):
+            temp = response['main']['temp']
+            humidity = response['main']['humidity']
+            desc = response['weather'][0]['description']
+            speak(f"The weather in {city} is {desc}, with a temperature of {temp}°C and humidity of {humidity}%.")
+        else:
+            speak("Sorry, I couldn't fetch the weather data.")
+    except Exception as e:
+        speak(f"Error fetching weather: {e}")
+
+def get_air_quality():
+    try:
+        url = f"http://api.airvisual.com/v2/city?city={city2}&state={state}&country={country}&key={air_api_key}"
+        response = requests.get(url).json()
+        if response.get('data') and 'current' in response['data']:
+            aqi_us = response['data']['current']['pollution']['aqius']
+            speak(f"The air quality index near you is {aqi_us}.")
+        else:
+            speak("Sorry, I couldn't fetch the air quality data.")
+    except Exception as e:
+        speak(f"Error fetching AQI: {e}")
+
+def get_time_and_date():
+    now = datetime.datetime.now()
+    speak(f"The time is {now.strftime('%I:%M %p')} and today's date is {now.strftime('%B %d, %Y')}.")
+
+def tell_joke():
+    speak(random.choice(jokes))
+
+def process_conversation(command):
+    for key in conversations:
+        if key in command:
+            speak(random.choice(conversations[key]))
+            return True
+    return False
+
+def process_command(command):
+    command = command.lower()
+    if process_conversation(command):
+        return
+    elif "hi" in command or "hello" in command:
+        speak("Hi there!")
+    elif "how are you" in command or "how you doing" in command:
+        speak("I'm doing good, how are you?")
+   
+    elif "turn on light one" in command or "turn on first light" in command or "on first light" in command or "on light one" in command:
+        send_command('3')
+    elif "turn off light one" in command or "turn off first light" in command or "off first light" in command or "off light one" in command:
+        send_command('2')
+    elif "turn on light two" in command or "turn on second light" in command or "on second light" in command or "on light 2" in command:
+        send_command('5')
+    elif "turn off light two" in command or "turn off second light" in command or "off second light" in command or "off light 2" in command:
+        send_command('4')
+    elif "turn on both lights" in command or "turn on all lights" in command or "on all lights" in command:
+        send_command('6')
+    elif "turn off both lights" in command or "turn off all lights" in command or "off all lights" in command:
+        send_command('7')
+    elif "weather" in command or "temperature" in command:
+        get_weather()
+    elif "air quality" in command or "aqi" in command:
+        get_air_quality()
+    elif "time" in command or "date" in command:
+        get_time_and_date()
+    elif "joke" in command or "tell me a joke" in command:
+        tell_joke()
+    elif "exit" in command or "stop" in command or "bye" in command:
+        speak("Goodbye! Have a great day.")
+        arduino.close()
+        exit()
+    else:
+        speak("I'm not sure what you said. Please try again.")
+
+def listen_for_command():
+    with sr.Microphone() as source:
+        print("🎙 Listening...")
+        try:
+            audio = recognizer.listen(source)
+            command = recognizer.recognize_google(audio).lower()
+            print(f"🔊 You said: {command}")
+            return command
+        except sr.UnknownValueError:
+            return ""
+        except sr.RequestError:
+            speak("Unable to connect to the internet. Please check your connection.")
+            return ""
+
+speak("Hello! I am Harry. I’m ready to assist you.")
+while True:
+    command = listen_for_command()
+    if command:
+        process_command(command)
