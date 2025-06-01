@@ -1,0 +1,54 @@
+//ARDUINO CODE
+
+
+#define FAN 5
+#define LIGHT1 3
+#define LIGHT2 4
+
+void setup() {
+  pinMode(FAN, OUTPUT);
+  pinMode(LIGHT1, OUTPUT);
+  pinMode(LIGHT2, OUTPUT);
+  digitalWrite(FAN, LOW);      
+  digitalWrite(LIGHT1, HIGH);   
+  digitalWrite(LIGHT2, HIGH);  
+
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (Serial.available()) {
+    char command = Serial.read();
+
+    switch (command) {
+      case '1':
+        digitalWrite(FAN, HIGH);
+        break;
+      case '0':
+        digitalWrite(FAN, LOW);
+        break;
+      case '3':
+        digitalWrite(LIGHT1, LOW);
+        break;
+      case '2':
+        digitalWrite(LIGHT1, HIGH);
+        break;
+      case '5':
+        digitalWrite(LIGHT2, LOW);
+        break;
+      case '4':
+        digitalWrite(LIGHT2, HIGH);
+        break;
+      case '6':
+        digitalWrite(LIGHT1, LOW);
+        digitalWrite(LIGHT2, LOW);
+        break;
+      case '7':
+        digitalWrite(LIGHT1, HIGH);
+        digitalWrite(LIGHT2, HIGH);
+        break;
+      default:
+        break;
+    }
+  }
+}
