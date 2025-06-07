@@ -22,13 +22,12 @@ engine = pyttsx3.init()
 engine.setProperty('rate', 170)
 engine.setProperty('volume', 1.0)
 
-weather_api_key = 'f1415c7208ae2f968cf391dd57623ac9'
-air_api_key = '0f01989b-050f-422c-a837-b78fc3e53da4'
-pincode = '522019'
-city = 'Chowdavaram'
-city2 = 'Vijayawada'
-state = 'Andhra Pradesh'
-country = 'India'
+weather_api_key = '' #enter your api key here
+air_api_key = '' #enter your api key here
+pincode = '' #enter your own data
+city = '' #enter your own data
+state = '' #enter your own data
+country = '' #enter your own data
 
 jokes = [
     "Why don’t scientists trust atoms? Because they make up everything!",
